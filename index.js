@@ -174,16 +174,16 @@ app.get("/student-home", function (req, res) {
               db.close
             })
 
-          // console.log(result[0].username);
-          // console.log(result[0].password);
-          db.close
+                    // console.log(result[0].username);
+                    // console.log(result[0].password);
+                    db.close
+                })
+            // res.render(__dirname + '/templates/landing.ejs', { rollno: req.session.username });
+            // res.render(__dirname + "/teacher_class2.ejs", { uname: uname });
         })
-      // res.render(__dirname + '/templates/landing.ejs', { rollno: req.session.username });
-      // res.render(__dirname + "/teacher_class2.ejs", { uname: uname });
-    })
-  } else {
-    res.sendFile(__dirname + "/templates/login.html")
-  }
+    } else {
+        res.sendFile(__dirname + "/templates/login.html")
+    }
 })
 
 app.get("/teacher-home", function (req, res) {
@@ -522,178 +522,128 @@ app.post("/assignment_new/:course_id", function (req, res) {
 })
 
 app.get("/email", function (req, res) {
-  MongoClient.connect(url, function (err, db) {
-    if (err) throw err
-    var dbo = db.db(databasename)
-    dbo
-      .collection("course")
-      .find()
-      .toArray(function (err, result) {
-        if (err) throw err
-        //console.log(result);
-        d = {}
-        final = {}
-        users = {}
-        for (let i = 0; i < result.length; i++) {
-          d[result[i].course_id] = []
-        }
-        dbo
-          .collection("assignment_list")
-          .find()
-          .toArray(function (err, res) {
-            console.log(res)
-            for (let i = 0; i < res.length; i++) {
-              console.log(res[i].course_id)
-              key1 = res[i].assignment_id
-              value = res[i].deadline
-              final[key1] = value
-            }
-            //console.log("final: ",final);
-            dbo
-              .collection("assignment_submission")
-              .find()
-              .toArray(function (err, output) {
-                console.log(output)
-                if (err) throw err
-                for (let i = 0; i < output.length; i++) {
-                  users[output[i].assignment_id] = []
-                  users[output[i].assignment_id].push(output[i].student_id)
-                }
-                console.log("users: ", users)
-                console.log(final)
-                for (let key in final) {
-                  if (final.hasOwnProperty(key)) {
-                    var value = final[key]
-                    //  const va=value.split("T");
-                    console.log("user enetered: ", value)
-                    value.setDate(value.getDate() - 1)
-                    var today = new Date()
-                    console.log("User: ", value.getDate())
-                    console.log(value.getDate() == today.getDate())
-                    if (
-                      value.getDate() == today.getDate() &&
-                      value.getMonth == today.getMonth() &&
-                      value.getYear() == today.getYear()
-                    ) {
-                      MongoClient.connect(url, function (err, db) {
-                        if (err) throw err
-                        //console.log("result:: ",result)
-                        var dbo = db.db(databasename)
-                        for (let i = 0; i < users[key].length; i++) {
-                          query = { username: users[key][i] }
-                          dbo
-                            .collection("login")
-                            .find(query)
-                            .toArray(function (err, ou) {
-                              if (err) throw err
-                              console.log(ou[0])
-                              var mail = ou.email
-                              console.log("Mail: ", mail)
-                              let mailDetails = {
-                                from: "shahbazjahan5@gmail.com",
-                                to: mail,
-                                subject: "ASSIGMENT SUBMISSION REMAINDER",
-                                text: "Submit the assignment ",
-                              }
-                              let mailTransporter = nodemailer.createTransport({
-                                service: "gmail",
-                                auth: {
-                                  user: "shahbazjahan5@gmail.com",
-                                  pass: "cyjtqpnysfhrikbi",
-                                },
-                              })
-
-                              mailTransporter.sendMail(
-                                mailDetails,
-                                function (err, data) {
-                                  if (err) {
-                                    console.log("Error Occurs")
-                                    console.log(err)
-                                  } else {
-                                    console.log("Email sent successfully")
-                                  }
-                                }
-                              )
-                            })
-                        }
-                      })
-                    }
-                  }
-                }
-              })
-          })
-      })
-  })
-})
-
-app.post("/assign-submission/:assignment_id", function (req, res) {
-  if (req.session.loggedin && req.session.type == "student") {
-    var sub = req.body.submission
-    var myobj = {
-      assignment_id: req.params.assignment_id,
-      student_id: req.session.username,
-    }
     MongoClient.connect(url, function (err, db) {
-      if (err) throw err
-      //console.log("result:: ",result)
-      var dbo = db.db(databasename)
-      dbo
-        .collection("assignment_submission")
-        .updateOne(myobj, { $set: { content: sub } }, function (err, _res) {
-          if (err) throw err
-          console.log("1 document inserted")
-          let mailTransporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-              user: "shahbazjahan5@gmail.com",
-              pass: "cyjtqpnysfhrikbi",
-            },
-          })
+        if (err) throw err;
+        var dbo = db.db(databasename);
+        dbo.collection("assignment_list").find().toArray(function (err, result) {
+            var arr = []
+            // console.log(result);
+            for (let i = 0; i < result.length; i++) {
+                var deadline = result[i].deadline;
+                var today = new Date();
+                deadline.setDate(deadline.getDate() - 1)
+                if (deadline.getTime() > today.getTime()) {
+                    arr.push(result[i].course_id);
+                }
+            }
+            var myobj = { course_id: arr[0] };
+            dbo.collection("course").find(myobj).toArray(function (err, result2) {
+                var branch = result2[0].branch;
+                var year = result2[0].year;
+                // console.log(result2);
+                var myobj2 = { branch: branch, year: year };
+                dbo.collection("login").find(myobj2).toArray(function (err, result3) {
+                    // console.log(result3)
+                    for (let i = 0; i < result3.length; i++) {
+                        var email = result3[i].email;
 
-          let mailDetails = {
-            from: "shahbazjahan5@gmail.com",
-            to: "mayankgujrathi@gmail.com",
-            subject: "Test mail",
-            text: "Node.js testing mail for crap",
-          }
-          const job = schedule.scheduleJob(Date.now(), function () {
-            // cron.schedule('* * * * * *', () => {
-            mailTransporter.sendMail(mailDetails, function (err, data) {
-              if (err) {
-                console.log("Error Occurs")
-                console.log(err)
-              } else {
-                console.log("Email sent successfully")
-              }
+                        let mailTransporter = nodemailer.createTransport({
+                            service: 'gmail',
+                            auth: {
+                                user: 'shahbazjahan5@gmail.com',
+                                pass: 'cyjtqpnysfhrikbi'
+                            }
+                        });
+                        let mailDetails = {
+                            from: 'shahbazjahan5@gmail.com',
+                            to: email,
+                            subject: 'Test mail',
+                            text: 'Gentle reminder for the students to submit the assignment with the deadline'
+                        };
+                        mailTransporter.sendMail(mailDetails, function (err, data) {
+                            if (err) {
+                                console.log('Error Occurs');
+                                console.log(err);
+                            } else {
+                                console.log('Email sent successfully');
+                            }
+                        });
+                    }
+
+                    db.close;
+                })
+                db.close;
             })
-            // console.log("hello worls");
-          })
 
-          res.sendFile(__dirname + "/templates/done.html")
-          db.close
+            db.close
         })
+
     })
-  } else {
-    res.sendFile(__dirname + "/templates/login.html")
-  }
 })
+
+app.post('/assign-submission/:assignment_id', function (req, res) {
+    if (req.session.loggedin && req.session.type == "student") {
+        var sub = req.body.submission;
+        var myobj = { assignment_id: req.params.assignment_id, student_id: req.session.username }
+        MongoClient.connect(url, function (err, db) {
+            if (err) throw err;
+            //console.log("result:: ",result)
+            var dbo = db.db(databasename);
+            dbo.collection("assignment_submission").updateOne(myobj, { $set: { content: sub } }, function (err, _res) {
+                if (err) throw err
+                console.log("1 document inserted")
+                let mailTransporter = nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: {
+                        user: 'shahbazjahan5@gmail.com',
+                        pass: 'cyjtqpnysfhrikbi'
+                    }
+                });
+
+                let mailDetails = {
+                    from: 'shahbazjahan5@gmail.com',
+                    to: 'mayankgujrathi@gmail.com',
+                    subject: 'Test mail',
+                    text: 'you submitted your assigment'
+                };
+                const job = schedule.scheduleJob(Date.now(), function () {
+                    // cron.schedule('* * * * * *', () => {
+                    mailTransporter.sendMail(mailDetails, function (err, data) {
+                        if (err) {
+                            console.log('Error Occurs');
+                            console.log(err);
+                        } else {
+                            console.log('Email sent successfully');
+                        }
+                    });
+                    // console.log("hello worls");
+                });
+
+                res.sendFile(__dirname + '/templates/done.html');
+                db.close
+            })
+        })
+    }
+    else {
+        res.sendFile(__dirname + '/templates/login.html');
+    }
+});
 
 app.get("/teacher-home/assignment/:assignment_id", function (req, res) {
-  MongoClient.connect(url, function (err, db) {
-    if (err) throw err
-    var dbo = db.db(databasename)
-    dbo
-      .collection("assignment_submission")
-      .find()
-      .toArray(function (err, result) {
-        if (err) throw err
-        console.log(result)
-        res.render(__dirname + "/templates/teacher_subm.ejs", {
-          result: result,
-        })
-      })
-  })
-})
+    MongoClient.connect(url, function (err, db) {
+        if (err) throw err;
+        var dbo = db.db(databasename);
+        dbo.collection("assignment_submission").find().toArray(function (err, result) {
+            if (err) throw err;
+            console.log(result);
+            res.render(__dirname + '/templates/teacher_subm.ejs', { result: result })
+        });
+
+    });
+
+
+});
+
 
 // app.get('/teacher-home', function (req, res) {
 //     if (req.session.loggedin && req.session.type == "teacher") {
@@ -770,7 +720,7 @@ app.post("/check-view/:assignment_id/:student_id", function (req, res) {
 })
 
 app.use((req, res, next) => {
-  res.status(404).sendFile(__dirname + "/templates/E404.html")
+    res.status(404).sendFile(__dirname+"/templates/E404.html")
 })
 
 app.listen(3000, function () {
