@@ -15,6 +15,7 @@ const session = require("express-session")
 const nodemailer = require("nodemailer")
 const schedule = require("node-schedule")
 const { runInNewContext } = require("vm")
+const port = process.env.PORT || 3000
 const app = express()
 app.use(bodyParser.json())
 app.use(
@@ -723,6 +724,6 @@ app.use((req, res, next) => {
     res.status(404).sendFile(__dirname+"/templates/E404.html")
 })
 
-app.listen(3000, function () {
+app.listen(port, function () {
   console.log("app listening on port 3000!")
 })
