@@ -5,19 +5,38 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+  <style>
+    .button {
+      transition-duration: 0.4s;
+      width:100px;
+      height:40px;
+      background-color:#293241;
+      border:#293241;
+      color:white;
+      margin-top: 2%;
+    }
+    body{
+      padding: 5%;
+    }
+    
+    .button:hover {
+      background-color: #4CAF50; /* Green */
+      color: white;
+    }
+  </style>
 </head>
 <body>
   <h3><%= assignment_title %></h3>
   <p><%= assignment_description %></p>
   <span>by</span><span><i><%= rollno %></i></span><br>
-  <b>content:</b>
+  <h3>Content:</h3>
   <span><%=content%></span>
   <form action="/check-view/<%=assignment_id%>/<%=rollno%>" method="post">
-    <label for="grade">Grade: </label>
+    <label for="grade"><h3>Grade: </h3></label>
     <input type="number" name="grade" id="grade"><br>
-    <label for="grade">Feedback: </label>
+    <label for="grade"><h3>Feedback:</h3> </label>
     <textarea name="feedback" id="feedback" cols="30" rows="10"></textarea><br>
-    <input type="submit" value="Submit">
+    <input type="submit" value="Submit" class="button">
   </form>
 </body>
 </html>
